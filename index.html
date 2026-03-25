@@ -281,9 +281,9 @@
 
     <script>
         // --- SMART ENVIRONMENT DETECTOR ---
-        // Automatically uses the Canvas test model here, but uses your real key on Netlify!
+        // Automatically uses the Canvas test model here, but uses your real key on Netlify/GitHub!
         const isCanvas = typeof __app_id !== 'undefined' || window.location.hostname === "";
-        const apiKey = isCanvas ? "" : "YOUR_NEW_GEODIRECTORY_API_KEY_HERE"; 
+        const apiKey = isCanvas ? "" : "AIzaSyB0BDQVYRbF2n5ohvNNFEfcYX62btjmkOs"; 
 
         // Structured representation of the rate card for the LLM
         const rateCardContext = `
@@ -335,6 +335,22 @@
             resultState.innerHTML = '';
             btn.disabled = true;
             btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            // SAFEGUARD: Check if the user forgot to add their key
+            if (!isCanvas && apiKey === "YOUR_NEW_GEODIRECTORY_API_KEY_HERE") {
+                resultState.innerHTML = `
+                    <div class="text-red-600 p-4 bg-red-50 rounded border border-red-200">
+                        <strong class="block mb-2 font-bold flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> 
+                            Action Required: Missing API Key
+                        </strong>
+                        <span class="text-sm">You left the placeholder text in the code! Please go to GitHub, edit your index.html file, and replace <strong>"YOUR_NEW_GEODIRECTORY_API_KEY_HERE"</strong> with your actual key from Google AI Studio.</span>
+                    </div>`;
+                loadingState.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                return;
+            }
 
             try {
                 // FIXED PAYLOAD STRUCTURE: Combined system prompt and user prompt
