@@ -336,22 +336,6 @@
             btn.disabled = true;
             btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-            // SAFEGUARD: Check if the user forgot to add their key
-            if (!isCanvas && apiKey === "YOUR_NEW_GEODIRECTORY_API_KEY_HERE") {
-                resultState.innerHTML = `
-                    <div class="text-red-600 p-4 bg-red-50 rounded border border-red-200">
-                        <strong class="block mb-2 font-bold flex items-center">
-                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> 
-                            Action Required: Missing API Key
-                        </strong>
-                        <span class="text-sm">You left the placeholder text in the code! Please go to GitHub, edit your index.html file, and replace <strong>"YOUR_NEW_GEODIRECTORY_API_KEY_HERE"</strong> with your actual key from Google AI Studio.</span>
-                    </div>`;
-                loadingState.classList.add('hidden');
-                btn.disabled = false;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
-                return;
-            }
-
             try {
                 // FIXED PAYLOAD STRUCTURE: Combined system prompt and user prompt
                 const payload = {
@@ -369,8 +353,8 @@
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`
                 ] : [
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=${apiKey}`
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`
                 ];
 
                 // Model Fallback Loop
@@ -384,7 +368,7 @@
 
                         if (!response.ok) {
                             const errorData = await response.json();
-                            throw new Error(`API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                            throw new Error(`${response.status} - ${errorData.error?.message || response.statusText}`);
                         }
 
                         const result = await response.json();
@@ -405,11 +389,8 @@
                     // Render markdown to HTML
                     resultState.innerHTML = marked.parse(textResponse);
                 } else {
-                    // If all endpoints 404'd, explain the Region/Key issue to the user
-                    if (lastError.includes("404")) {
-                        throw new Error("Google AI Models are unavailable for this API key. This usually means your Google Cloud project is in a restricted region (like the EU/UK) or requires billing to be enabled in Google AI Studio.");
-                    }
-                    throw new Error(lastError || "All AI models failed to respond.");
+                    // Give the exact raw error so we aren't masking the real issue
+                    throw new Error(`Google API Error: ${lastError}. (If this is a 404, the API Key's Google Cloud Project is blocked. Try using a key from a newly created project).`);
                 }
 
             } catch (error) {
